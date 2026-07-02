@@ -318,13 +318,13 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                     <td className="row-number">
                       {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                     </td>
-                    <td style={{ fontWeight: 700, color: 'var(--text-accent)' }}>
+                    <td data-label="رقم القيد" style={{ fontWeight: 700, color: 'var(--text-accent)' }}>
                       {record.registrationNumber}
                     </td>
-                    <td style={{ direction: 'ltr', textAlign: 'center', fontSize: '0.8rem' }}>
+                    <td data-label="التاريخ" className="table-date-cell">
                       {record.registrationDate}
                     </td>
-                    <td>
+                    <td data-label="النوع">
                       <span
                         className={`status-badge ${
                           record.type === 'وارد' ? 'incoming' : 'outgoing'
@@ -333,33 +333,27 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                         {record.type === 'وارد' ? Icons.arrowDownLeft : Icons.arrowUpRight} {record.type}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="الدرجة السرية">
                       <span className={`classification-badge ${
                         record.classification === 'سري للغاية' ? 'top-secret' : record.classification === 'سري' ? 'secret' : record.classification === 'محدود' ? 'restricted' : 'public'
                       }`}>
                         {record.classification || 'عام'}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.8rem' }}>{record.source}</td>
-                    <td
-                      style={{
-                        maxWidth: '250px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontSize: '0.82rem',
-                      }}
+                    <td data-label="الجهة الواردة / المرسلة" style={{ fontSize: '0.8rem' }}>{record.source}</td>
+                    <td data-label="ملخص المكاتبة ومضمونها"
+                      className="table-summary-cell"
                       title={record.summary}
                     >
                       {record.summary}
                     </td>
-                    <td>
+                    <td data-label="المرفقات">
                       <span className="attachment-count">
                         {Icons.paperclip}
                         {record.attachments}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="المسؤول">
                       <span className="responsible-person">
                         <span
                           className={`responsible-avatar ${getResponsibleColor(
@@ -371,22 +365,22 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                         <span style={{ fontSize: '0.8rem' }}>{record.responsible}</span>
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.8rem' }}>{record.commander}</td>
-                    <td>
+                    <td data-label="القائد / الوحدة" style={{ fontSize: '0.8rem' }}>{record.commander}</td>
+                    <td data-label="الحالة">
                       <span className={`status-badge ${getStatusClass(record.status)}`}>
                         {record.status}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'center' }}>
+                    <td data-label="الأولوية" style={{ textAlign: 'center' }}>
                       <span
                         className={`priority-dot ${getPriorityClass(record.priority)}`}
                         title={record.priority}
                       ></span>
                     </td>
-                    <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    <td data-label="ملاحظات" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                       {record.notes || '—'}
                     </td>
-                    <td>
+                    <td data-label="الإجراءات">
                       <div className="actions-cell">
                         <button
                           className="action-btn view"

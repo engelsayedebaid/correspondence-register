@@ -96,6 +96,7 @@ function Header({
                 marginTop: '2px',
                 width: 'fit-content'
               }}
+              className="hidden-mobile"
               title="حذف الشعار المخصص واستعادة الافتراضي"
             >
               🔄 استعادة الشعار الافتراضي
@@ -108,7 +109,7 @@ function Header({
         {/* Intranet Connection / Timer */}
         <div className="session-timer">
           <span className="session-dot"></span>
-          <span>اتصال حكومي مؤمن: {elapsed}</span>
+          <span><span className="hidden-mobile">اتصال حكومي مؤمن: </span>{elapsed}</span>
         </div>
 
         {/* Audit Logs Trigger (Admin only) */}
@@ -124,7 +125,7 @@ function Header({
               <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
               <path d="M12 6v6l4 2" />
             </svg>
-            سجل العمليات الأمني
+            <span className="hidden-mobile">سجل العمليات الأمني</span>
           </button>
         )}
 
@@ -172,7 +173,7 @@ function Header({
         {/* User Info Badge */}
         <div className="user-badge" style={{ paddingLeft: '0.75rem' }}>
           <div className="user-avatar">{initials}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', marginRight: '0.1rem' }}>
+          <div className="hidden-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', marginRight: '0.1rem' }}>
             <span className="user-name" style={{ fontSize: '0.8rem', lineHeight: 1.1 }}>{user?.name}</span>
             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 600 }}>{user?.role}</span>
           </div>
@@ -193,7 +194,7 @@ function Header({
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          خروج
+          <span className="hidden-mobile">خروج</span>
         </button>
       </div>
     </header>

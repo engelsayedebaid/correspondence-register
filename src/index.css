@@ -793,6 +793,20 @@ body::before {
   border-left: none;
 }
 
+.table-summary-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.table-date-cell {
+  direction: ltr;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
 /* Zebra stripes */
 .register-table tbody tr:nth-child(even) {
   background: rgba(30, 41, 59, 0.3);
@@ -1438,6 +1452,125 @@ body::before {
   
   .header-title {
     display: none;
+  }
+
+  .hidden-mobile {
+    display: none !important;
+  }
+
+  /* Table to Cards layout for mobile viewports */
+  .table-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .table-wrapper {
+    overflow: visible !important;
+  }
+
+  .register-table {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .register-table thead {
+    display: none !important;
+  }
+
+  .register-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    width: 100% !important;
+  }
+
+  .register-table tbody tr {
+    display: block !important;
+    background: var(--surface-card) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 1rem !important;
+    box-shadow: var(--shadow-sm) !important;
+    position: relative !important;
+    width: 100% !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+
+  .register-table tbody tr:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-md) !important;
+    background: var(--surface-card) !important;
+  }
+
+  .register-table tbody tr:nth-child(even) {
+    background: var(--surface-card) !important; /* Uniform card backgrounds */
+  }
+
+  .register-table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border: none !important;
+    padding: 0.6rem 0 !important;
+    border-bottom: 1px dashed rgba(148, 163, 184, 0.12) !important;
+    width: 100% !important;
+    text-align: left !important;
+    white-space: normal !important; /* Allow wrapping inside cards for long text */
+  }
+
+  .register-table td:last-child {
+    border-bottom: none !important;
+    padding-top: 0.8rem !important;
+    margin-top: 0.2rem !important;
+  }
+
+  /* Exclude row number from card layout */
+  .register-table td.row-number {
+    display: none !important;
+  }
+
+  /* Extract labels dynamically from data-label attributes */
+  .register-table td::before {
+    content: attr(data-label) !important;
+    font-weight: 700 !important;
+    color: var(--text-secondary) !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    font-size: 0.82rem !important;
+    text-align: right !important;
+  }
+
+  /* Actions container layout inside cards */
+  .actions-cell {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    gap: 0.8rem !important;
+  }
+
+  .action-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .table-summary-cell {
+    max-width: none !important;
+    white-space: normal !important;
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .table-date-cell {
+    direction: rtl !important; /* Forces standard Arabic layout so the label stays on the right, date values on the left */
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
   }
 }
 
