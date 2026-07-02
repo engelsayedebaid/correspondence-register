@@ -30,7 +30,7 @@ function App() {
 
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'dark');
   const [showAuditLogs, setShowAuditLogs] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768);
   const [activeNav, setActiveNav] = useState('register');
   const [systemLogo, setSystemLogo] = useState(() => localStorage.getItem('system_logo') || null);
   const [auditLogs, setAuditLogs] = useState(() => {

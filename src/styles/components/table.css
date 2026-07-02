@@ -602,31 +602,31 @@
 @media (max-width: 768px) {
   .stats-bar {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
   }
 
   .stat-card {
-    padding: 0.65rem 0.75rem;
-    gap: 0.6rem;
+    padding: 0.85rem 0.9rem;
+    gap: 0.75rem;
   }
 
   .stat-icon {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
   }
 
   .stat-icon svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 
   .stat-value {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
   }
 
   .stat-label {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
   }
 
   .toolbar {
@@ -656,11 +656,12 @@
 
   .search-box {
     max-width: 100%;
+    width: 100%;
   }
 
   .search-box input {
-    padding: 0.65rem 2.5rem 0.65rem 0.85rem;
-    font-size: var(--font-body);
+    padding: 0.85rem 2.75rem 0.85rem 1rem;
+    font-size: 0.95rem;
     border-radius: var(--radius-lg);
   }
 
@@ -722,15 +723,16 @@
 
   .register-table tbody td {
     display: flex;
+    flex-direction: row-reverse;
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
     padding: 0.65rem 1rem;
     border-bottom: 1px solid var(--border);
     border-left: none;
-    text-align: left;
     font-size: var(--font-caption);
     line-height: 1.5;
+    direction: ltr;
   }
 
   .register-table tbody td:last-child {
@@ -744,6 +746,8 @@
     color: var(--text-muted);
     flex-shrink: 0;
     min-width: 100px;
+    text-align: right;
+    direction: rtl;
   }
 
   .register-table tbody td:first-child {
