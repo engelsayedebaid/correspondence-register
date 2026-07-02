@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   generateFakeData,
   departments as defaultDepartments,
@@ -32,7 +32,24 @@ function saveList(key, list) {
 }
 
 function Register({ user, addToast, addLogEntry }) {
-  const [records, setRecords] = useState(() => generateFakeData(25));
+  const [records, setRecords] = useState(() => {
+    const saved = localStorage.getItem('reg_records');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse local records", e);
+      }
+    }
+    const initial = generateFakeData(25);
+    localStorage.setItem('reg_records', JSON.stringify(initial));
+    return initial;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('reg_records', JSON.stringify(records));
+  }, [records]);
+
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('الكل');
   const [statusFilter, setStatusFilter] = useState('الكل');
