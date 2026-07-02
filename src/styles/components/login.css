@@ -1,31 +1,82 @@
+/* ═══════════════════════════════════════
+   Login — Animated Brand + Glass Form
+   ═══════════════════════════════════════ */
 .login-page {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
 
+/* Brand panel with animated gradient */
 .login-brand {
-  background: var(--brand-muted);
-  border-left: 1px solid var(--border);
+  background: var(--surface-sunken);
+  border-left: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 3rem 2.5rem;
   text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Decorative floating shapes */
+.login-brand::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+  top: -80px;
+  right: -80px;
+  border-radius: 50%;
+  animation: float-shape 12s ease-in-out infinite;
+}
+
+.login-brand::after {
+  content: '';
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  bottom: -60px;
+  left: -60px;
+  border-radius: 50%;
+  animation: float-shape 10s ease-in-out infinite reverse;
+}
+
+@keyframes float-shape {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(15px, -20px) scale(1.05); }
+  50% { transform: translate(-10px, 15px) scale(0.95); }
+  75% { transform: translate(20px, 10px) scale(1.02); }
+}
+
+/* Brand logo with glow ring */
 .login-brand-logo {
-  width: 72px;
-  height: 72px;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
+  width: 76px;
+  height: 76px;
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.5rem;
   overflow: hidden;
+  box-shadow: var(--shadow-md), 0 0 30px rgba(59, 130, 246, 0.12);
+  transition: transform var(--spring), box-shadow var(--transition);
+  position: relative;
+  z-index: 1;
+  animation: scaleIn 0.4s var(--spring) both;
+}
+
+.login-brand-logo:hover {
+  transform: scale(1.06);
+  box-shadow: var(--shadow-lg), var(--glow-brand);
 }
 
 .login-brand-logo img {
@@ -47,6 +98,9 @@
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.4s ease-out 0.1s both;
 }
 
 .login-brand-desc {
@@ -55,18 +109,27 @@
   max-width: 320px;
   line-height: 1.7;
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.4s ease-out 0.2s both;
 }
 
+/* Security note with animated icon */
 .login-security-note {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: var(--font-small);
   color: var(--text-muted);
-  padding: 0.5rem 1rem;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
+  padding: 0.55rem 1.1rem;
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-full);
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.4s ease-out 0.3s both;
 }
 
 .login-security-note svg {
@@ -74,8 +137,10 @@
   height: 14px;
   color: var(--success-text);
   flex-shrink: 0;
+  animation: pulse-soft 2.5s ease-in-out infinite;
 }
 
+/* Form panel */
 .login-form-panel {
   display: flex;
   align-items: center;
@@ -87,6 +152,7 @@
 .login-form-card {
   width: 100%;
   max-width: 400px;
+  animation: fadeInUp 0.4s ease-out 0.15s both;
 }
 
 .login-form-title {
@@ -105,20 +171,24 @@
 .login-error {
   background: var(--danger-muted);
   color: var(--danger-text);
-  border: 1px solid transparent;
+  border: 1px solid rgba(239, 68, 68, 0.15);
   border-radius: var(--radius-md);
-  padding: 0.65rem 0.85rem;
+  padding: 0.7rem 0.9rem;
   font-size: var(--font-caption);
   margin-bottom: 1rem;
   line-height: 1.5;
+  animation: shake 0.35s ease-out;
 }
 
+/* Credentials card with glass */
 .login-credentials {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  margin-top: 1.75rem;
+  padding: 1.1rem;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
 }
 
 .login-credentials-title {
@@ -141,20 +211,29 @@
   color: var(--text-secondary);
 }
 
+/* ═══════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════ */
 @media (max-width: 768px) {
   .login-page {
     grid-template-columns: 1fr;
   }
 
   .login-brand {
-    padding: 1.5rem 1.25rem;
+    padding: 1.75rem 1.25rem;
     border-left: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .login-brand::before,
+  .login-brand::after {
+    width: 200px;
+    height: 200px;
   }
 
   .login-brand-logo {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     margin-bottom: 1rem;
   }
 
@@ -174,7 +253,7 @@
 
   .login-security-note {
     font-size: 0.65rem;
-    padding: 0.4rem 0.75rem;
+    padding: 0.4rem 0.85rem;
   }
 
   .login-form-panel {
@@ -197,7 +276,7 @@
   }
 
   .login-credentials {
-    padding: 0.85rem;
+    padding: 0.9rem;
   }
 
   .login-credentials-list {

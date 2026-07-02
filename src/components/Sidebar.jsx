@@ -8,32 +8,50 @@ function Sidebar({ activeItem, onNavigate, isOpen, onClose, isAdmin }) {
       />
       <aside className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
         <div className="sidebar-label">القائمة الرئيسية</div>
-        <button
-          type="button"
-          className={`sidebar-nav-item ${activeItem === 'register' ? 'active' : ''}`}
-          onClick={() => { onNavigate('register'); onClose(); }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-          سجل المعاملات
-        </button>
-        {isAdmin && (
+        
+        <nav className="sidebar-nav">
           <button
             type="button"
-            className={`sidebar-nav-item ${activeItem === 'audit' ? 'active' : ''}`}
-            onClick={() => { onNavigate('audit'); onClose(); }}
+            className={`sidebar-nav-item ${activeItem === 'register' ? 'active' : ''}`}
+            onClick={() => { onNavigate('register'); onClose(); }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
             </svg>
-            سجل العمليات
+            <span>سجل المكاتبات</span>
           </button>
-        )}
+
+          <button
+            type="button"
+            className={`sidebar-nav-item ${activeItem === 'add-record' ? 'active' : ''}`}
+            onClick={() => { onNavigate('add-record'); onClose(); }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span>إضافة معاملة جديدة</span>
+          </button>
+
+          {isAdmin && (
+            <>
+              <div className="sidebar-label" style={{ marginTop: '1.5rem' }}>الإدارة</div>
+              <button
+                type="button"
+                className={`sidebar-nav-item ${activeItem === 'audit' ? 'active' : ''}`}
+                onClick={() => { onNavigate('audit'); onClose(); }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="M12 8v4" />
+                  <path d="M12 16h.01" />
+                </svg>
+                <span>سجل العمليات</span>
+              </button>
+            </>
+          )}
+        </nav>
       </aside>
     </>
   );

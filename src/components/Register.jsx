@@ -43,25 +43,7 @@ function getClassificationVariant(classification) {
   return 'public';
 }
 
-function Register({ user, addToast, addLogEntry }) {
-  const [records, setRecords] = useState(() => {
-    const saved = localStorage.getItem('reg_records');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse local records', e);
-      }
-    }
-    const initial = generateFakeData(25);
-    localStorage.setItem('reg_records', JSON.stringify(initial));
-    return initial;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('reg_records', JSON.stringify(records));
-  }, [records]);
-
+function Register({ user, addToast, addLogEntry, records, setRecords, onNavigate }) {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('الكل');
   const [statusFilter, setStatusFilter] = useState('الكل');
@@ -91,10 +73,61 @@ function Register({ user, addToast, addLogEntry }) {
   const handlePrioritiesChange = (list) => { setPrioritiesList(list); saveList('reg_priorities', list); };
   const handleClassificationsChange = (list) => { setClassificationsList(list); saveList('reg_classifications', list); };
 
-  const [showAddModal, setShowAddModal] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
   const [deleteRecord, setDeleteRecord] = useState(null);
+
+  const handleExportExcel = () => {
+    const headers = ['رقم القيد', 'التاريخ', 'النوع', 'الجهة', 'الملخص', 'المرفقات', 'المسؤول', 'الحالة', 'الأولوية'];
+    const rows = filtered.map(r => [
+      r.registrationNumber,
+      r.registrationDate,
+      r.type,
+      r.source,
+      r.summary.replace(/,/g, ' '),
+      Array.isArray(r.attachments) ? r.attachments.length : (r.attachments || 0),
+      r.responsible,
+      r.status,
+      r.priority
+    ]);
+
+    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `سجل_المكاتبات_${new Date().toLocaleDateString('ar-EG')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast('تم تصدير ملف الإكسل بنجاح', 'success');
+  };
+
+  const handleAdd = (form) => {
+    const newRecord = {
+      ...form,
+      id: `REG-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setRecords(prev => [newRecord, ...prev]);
+    addToast('تمت إضافة المعاملة بنجاح', 'success');
+    addLogEntry(`إضافة معاملة جديدة برقم قيد: ${form.registrationNumber}`);
+  };
+
+  const handleEdit = (form) => {
+    setRecords(prev => prev.map(r => r.id === editRecord.id ? { ...r, ...form } : r));
+    setEditRecord(null);
+    addToast('تم تحديث المعاملة بنجاح', 'success');
+    addLogEntry(`تعديل معاملة رقم: ${editRecord.registrationNumber}`);
+  };
+
+  const handleDelete = () => {
+    setRecords(prev => prev.filter(r => r.id !== deleteRecord.id));
+    setDeleteRecord(null);
+    addToast('تم حذف المعاملة نهائياً', 'info');
+    addLogEntry(`حذف معاملة رقم: ${deleteRecord.registrationNumber}`);
+  };
 
   const today = new Date().toLocaleDateString('ar-EG', {
     weekday: 'long',
@@ -112,6 +145,7 @@ function Register({ user, addToast, addLogEntry }) {
         r.registrationNumber.includes(search) ||
         r.responsible.includes(search) ||
         r.commander.includes(search) ||
+        (r.notes && r.notes.includes(search)) ||
         r.id.toLowerCase().includes(search.toLowerCase());
 
       const matchType = typeFilter === 'الكل' || r.type === typeFilter;
@@ -134,37 +168,6 @@ function Register({ user, addToast, addLogEntry }) {
     urgent: records.filter((r) => r.status === 'عاجل').length,
   }), [records]);
 
-  const handleAdd = (data) => {
-    const newRecord = {
-      ...data,
-      id: `CR-${(records.length + 1).toString().padStart(4, '0')}`,
-    };
-    setRecords((prev) => [newRecord, ...prev]);
-    setShowAddModal(false);
-    addLogEntry('إضافة معاملة جديدة بقيد رقم: ' + data.registrationNumber);
-    addToast('تم إضافة المعاملة بنجاح', 'success');
-  };
-
-  const handleEdit = (data) => {
-    setRecords((prev) =>
-      prev.map((r) => (r.id === editRecord.id ? { ...r, ...data } : r))
-    );
-    setEditRecord(null);
-    addLogEntry('تعديل معاملة بقيد رقم: ' + data.registrationNumber);
-    addToast('تم تعديل المعاملة بنجاح', 'success');
-  };
-
-  const handleDelete = () => {
-    setRecords((prev) => prev.filter((r) => r.id !== deleteRecord.id));
-    addLogEntry('حذف معاملة بقيد رقم: ' + deleteRecord.registrationNumber);
-    setDeleteRecord(null);
-    addToast('تم حذف المعاملة بنجاح', 'success');
-    const newTotal = Math.ceil((filtered.length - 1) / rowsPerPage);
-    if (currentPage > newTotal && newTotal > 0) {
-      setCurrentPage(newTotal);
-    }
-  };
-
   const handleShareRecord = (record) => {
     const text = `*تفاصيل المكاتبة رقم: ${record.registrationNumber}*
 
@@ -177,7 +180,7 @@ function Register({ user, addToast, addLogEntry }) {
 • *القائد / الوحدة:* ${record.commander}
 • *الحالة:* ${record.status}
 • *الأولوية:* ${record.priority}
-• *المرفقات:* ${record.attachments} مرفق
+• *المرفقات:* ${Array.isArray(record.attachments) ? record.attachments.length : (record.attachments || 0)} مرفق
 • *ملاحظات:* ${record.notes || 'لا يوجد'}
 
 _تمت المشاركة من نظام سجل الوارد والصادر الإلكتروني_`;
@@ -225,31 +228,56 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
 
       <div className="stats-bar">
         <div className="stat-card">
-          <div className="stat-icon blue">{Icons.clipboard}</div>
-          <div>
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">إجمالي المعاملات</div>
+          <div className="stat-icon blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{records.length}</div>
+            <div className="stat-label">إجمالي المكاتبات</div>
           </div>
         </div>
+        
         <div className="stat-card">
-          <div className="stat-icon green">{Icons.inbox}</div>
-          <div>
-            <div className="stat-value">{stats.incoming}</div>
-            <div className="stat-label">الوارد</div>
+          <div className="stat-icon blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+              <path d="M20 17H4c-1.1 0-2 .9-2 2v1a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-1c0-1.1-.9-2-2-2z" />
+            </svg>
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{records.filter(r => r.type === 'وارد').length}</div>
+            <div className="stat-label">وارد</div>
           </div>
         </div>
+
         <div className="stat-card">
-          <div className="stat-icon amber">{Icons.send}</div>
-          <div>
-            <div className="stat-value">{stats.outgoing}</div>
-            <div className="stat-label">الصادر</div>
+          <div className="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+              <path d="M20 17H4c-1.1 0-2 .9-2 2v1a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-1c0-1.1-.9-2-2-2z" />
+            </svg>
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{records.filter(r => r.type === 'صادر').length}</div>
+            <div className="stat-label">صادر</div>
           </div>
         </div>
+
         <div className="stat-card">
-          <div className="stat-icon rose">{Icons.alertTriangle}</div>
-          <div>
-            <div className="stat-value">{stats.urgent}</div>
-            <div className="stat-label">عاجل</div>
+          <div className="stat-icon amber">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div className="stat-info">
+            <div className="stat-value">{records.filter(r => r.status === 'قيد التنفيذ').length}</div>
+            <div className="stat-label">قيد التنفيذ</div>
           </div>
         </div>
       </div>
@@ -257,21 +285,25 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
       <div className="toolbar">
         <div className="toolbar-right">
           <div className="search-box">
-            <span className="search-icon">{Icons.search}</span>
             <input
-              id="search-input"
               type="text"
-              placeholder="بحث في المعاملات..."
+              placeholder="البحث برقم القيد، الجهة، الملخص، أو المسئول..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             />
+            <span className="search-icon">{Icons.search}</span>
+            {search && (
+              <button 
+                className="search-clear" 
+                onClick={() => { setSearch(''); setCurrentPage(1); }}
+                title="مسح البحث"
+              >
+                {Icons.x}
+              </button>
+            )}
           </div>
 
           <div className="filter-row">
-            <span className="filter-label">النوع:</span>
             <div className="filter-group">
               {['الكل', ...typesList].map((t) => (
                 <button
@@ -284,10 +316,6 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="filter-row">
-            <span className="filter-label">الحالة:</span>
             <div className="filter-group">
               {['الكل', ...statusesList].map((s) => (
                 <button
@@ -303,12 +331,34 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
           </div>
         </div>
 
-        {user?.role !== 'مستعرض' && (
-          <Button variant="success" onClick={() => setShowAddModal(true)} id="add-record-btn">
-            {Icons.plus}
-            إضافة معاملة
+        <div className="toolbar-left">
+          <Button variant="secondary" onClick={handleExportExcel} title="تصدير إكسل">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="8" y1="13" x2="16" y2="13" />
+              <line x1="8" y1="17" x2="16" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            <span>إكسل</span>
           </Button>
-        )}
+          
+          <Button variant="secondary" onClick={() => window.print()} title="طباعة PDF">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            <span>PDF</span>
+          </Button>
+
+          {user?.role !== 'مستعرض' && (
+            <Button variant="primary" onClick={() => onNavigate('add-record')} id="add-record-btn">
+              {Icons.plus}
+              <span>إضافة معاملة جديدة</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="table-controls">
@@ -499,28 +549,6 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
           </div>
         </div>
       </div>
-
-      {showAddModal && (
-        <AddEditModal
-          onClose={() => setShowAddModal(false)}
-          onSave={handleAdd}
-          title="إضافة معاملة جديدة"
-          departmentsList={departmentsList}
-          responsibleList={responsibleList}
-          commandersList={commandersList}
-          typesList={typesList}
-          statusesList={statusesList}
-          prioritiesList={prioritiesList}
-          classificationsList={classificationsList}
-          onDepartmentsChange={handleDepartmentsChange}
-          onResponsibleChange={handleResponsibleChange}
-          onCommandersChange={handleCommandersChange}
-          onTypesChange={handleTypesChange}
-          onStatusesChange={handleStatusesChange}
-          onPrioritiesChange={handlePrioritiesChange}
-          onClassificationsChange={handleClassificationsChange}
-        />
-      )}
 
       {editRecord && (
         <AddEditModal

@@ -3,6 +3,7 @@ import Login from './components/Login';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Register from './components/Register';
+import NewRecordPage from './components/NewRecordPage';
 import Toast from './components/Toast';
 import AuditLogModal from './components/AuditLogModal';
 
@@ -19,7 +20,7 @@ function App() {
 
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'dark');
   const [showAuditLogs, setShowAuditLogs] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeNav, setActiveNav] = useState('register');
   const [systemLogo, setSystemLogo] = useState(() => localStorage.getItem('system_logo') || null);
   const [auditLogs, setAuditLogs] = useState(() => {
@@ -142,6 +143,63 @@ function App() {
     addToast('تم تصفير سجل العمليات الأمني بالكامل', 'info');
   };
 
+  const [records, setRecords] = useState(() => {
+    const saved = localStorage.getItem('reg_records');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse local records', e);
+      }
+    }
+    return [];
+  });
+
+  const [departmentsList, setDepartmentsList] = useState(() => {
+    const saved = localStorage.getItem('reg_departments');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [responsibleList, setResponsibleList] = useState(() => {
+    const saved = localStorage.getItem('reg_responsible');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [commandersList, setCommandersList] = useState(() => {
+    const saved = localStorage.getItem('reg_commanders');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [typesList, setTypesList] = useState(() => {
+    const saved = localStorage.getItem('reg_types');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [statusesList, setStatusesList] = useState(() => {
+    const saved = localStorage.getItem('reg_statuses');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [prioritiesList, setPrioritiesList] = useState(() => {
+    const saved = localStorage.getItem('reg_priorities');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [classificationsList, setClassificationsList] = useState(() => {
+    const saved = localStorage.getItem('reg_classifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('reg_records', JSON.stringify(records));
+  }, [records]);
+
+  const handleAddRecord = (newRecord) => {
+    const recordToAdd = {
+      ...newRecord,
+      id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setRecords(prev => [recordToAdd, ...prev]);
+    addToast('تمت إضافة المعاملة بنجاح', 'success');
+    addLogEntry(`إضافة معاملة جديدة برقم قيد: ${newRecord.registrationNumber}`);
+    setActiveNav('register');
+  };
+
   const handleNavigate = (item) => {
     setActiveNav(item);
     if (item === 'audit') {
@@ -175,11 +233,35 @@ function App() {
               isAdmin={user?.role === 'مدير النظام'}
             />
             <main className="main-content">
-              <Register
-                user={user}
-                addToast={addToast}
-                addLogEntry={addLogEntry}
-              />
+              {activeNav === 'register' ? (
+                <Register
+                  user={user}
+                  addToast={addToast}
+                  addLogEntry={addLogEntry}
+                  records={records}
+                  setRecords={setRecords}
+                  onNavigate={handleNavigate}
+                />
+              ) : activeNav === 'add-record' ? (
+                <NewRecordPage
+                  onSave={handleAddRecord}
+                  onCancel={() => setActiveNav('register')}
+                  departmentsList={departmentsList}
+                  responsibleList={responsibleList}
+                  commandersList={commandersList}
+                  typesList={typesList}
+                  statusesList={statusesList}
+                  prioritiesList={prioritiesList}
+                  classificationsList={classificationsList}
+                  onDepartmentsChange={(l) => { setDepartmentsList(l); localStorage.setItem('reg_departments', JSON.stringify(l)); }}
+                  onResponsibleChange={(l) => { setResponsibleList(l); localStorage.setItem('reg_responsible', JSON.stringify(l)); }}
+                  onCommandersChange={(l) => { setCommandersList(l); localStorage.setItem('reg_commanders', JSON.stringify(l)); }}
+                  onTypesChange={(l) => { setTypesList(l); localStorage.setItem('reg_types', JSON.stringify(l)); }}
+                  onStatusesChange={(l) => { setStatusesList(l); localStorage.setItem('reg_statuses', JSON.stringify(l)); }}
+                  onPrioritiesChange={(l) => { setPrioritiesList(l); localStorage.setItem('reg_priorities', JSON.stringify(l)); }}
+                  onClassificationsChange={(l) => { setClassificationsList(l); localStorage.setItem('reg_classifications', JSON.stringify(l)); }}
+                />
+              ) : null}
             </main>
           </div>
         </div>

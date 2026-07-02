@@ -131,7 +131,27 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
         </div>
         <div className="detail-row">
           <span className="detail-label">المرفقات</span>
-          <span className="detail-value">{record.attachments} مرفق</span>
+          <div className="detail-value">
+            {Array.isArray(record.attachments) && record.attachments.length > 0 ? (
+              <div className="view-attachments-list">
+                {record.attachments.map((file, idx) => (
+                  <div key={file.id || idx} className="view-attachment-item">
+                    <span className="file-name">{file.name}</span>
+                    <div className="file-actions">
+                      <button 
+                        className="file-preview-btn" 
+                        onClick={() => window.open(file.url, '_blank')}
+                      >
+                        معاينة
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span>{typeof record.attachments === 'number' ? record.attachments : 0} مرفق</span>
+            )}
+          </div>
         </div>
         <div className="detail-row">
           <span className="detail-label">ملاحظات</span>

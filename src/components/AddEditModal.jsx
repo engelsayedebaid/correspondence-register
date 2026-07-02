@@ -3,6 +3,7 @@ import EditableSelect from './EditableSelect';
 import DocumentScanner from './DocumentScanner';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
+import { Icons } from './Icons';
 
 function AddEditModal({
   record,
@@ -30,7 +31,7 @@ function AddEditModal({
     type: record?.type || 'وارد',
     source: record?.source || '',
     summary: record?.summary || '',
-    attachments: record?.attachments ?? 0,
+    attachments: Array.isArray(record?.attachments) ? record.attachments : [],
     commander: record?.commander || '',
     responsible: record?.responsible || '',
     status: record?.status || 'قيد المعالجة',
@@ -162,15 +163,59 @@ function AddEditModal({
               {errors.summary && <div className="form-error">{errors.summary}</div>}
             </div>
 
-            <div className="form-group">
-              <label className="form-label">عدد المرفقات</label>
-              <input
-                className="form-input"
-                type="number"
-                min="0"
-                value={form.attachments}
-                onChange={(e) => handleChange('attachments', parseInt(e.target.value) || 0)}
-              />
+            <div className="form-group full-width">
+              <label className="form-label">المرفقات (PDF, صور, Word)</label>
+              <div className="file-upload-area">
+                <input
+                  type="file"
+                  multiple
+                  id="file-input"
+                  className="hidden-file-input"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    const newAttachments = files.map(file => ({
+                      id: Math.random().toString(36).substr(2, 9),
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                      url: URL.createObjectURL(file)
+                    }));
+                    handleChange('attachments', [...(form.attachments || []), ...newAttachments]);
+                  }}
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                />
+                <label htmlFor="file-input" className="file-upload-label">
+                  <div className="file-upload-icon">{Icons.paperclip}</div>
+                  <div className="file-upload-text">اضغط هنا أو اسحب الملفات لرفعها</div>
+                  <div className="file-upload-hint">الحد الأقصى 10 ميجا للملف الواحد</div>
+                </label>
+              </div>
+
+              {form.attachments && form.attachments.length > 0 && (
+                <div className="attachments-list">
+                  {form.attachments.map((file, idx) => (
+                    <div key={file.id || idx} className="attachment-item">
+                      <div className="attachment-icon">
+                        {file.type?.includes('image') ? Icons.image : Icons.fileText}
+                      </div>
+                      <div className="attachment-info">
+                        <span className="attachment-name">{file.name}</span>
+                        <span className="attachment-size">{(file.size / 1024).toFixed(1)} KB</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="attachment-remove"
+                        onClick={() => {
+                          const next = form.attachments.filter((_, i) => i !== idx);
+                          handleChange('attachments', next);
+                        }}
+                      >
+                        {Icons.x}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
