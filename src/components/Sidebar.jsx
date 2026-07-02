@@ -1,4 +1,11 @@
 function Sidebar({ activeItem, onNavigate, isOpen, onClose, isAdmin }) {
+  const isMobile = () => window.innerWidth <= 768;
+
+  const handleNav = (item) => {
+    onNavigate(item);
+    if (isMobile()) onClose();
+  };
+
   return (
     <>
       <div
@@ -13,7 +20,7 @@ function Sidebar({ activeItem, onNavigate, isOpen, onClose, isAdmin }) {
           <button
             type="button"
             className={`sidebar-nav-item ${activeItem === 'register' ? 'active' : ''}`}
-            onClick={() => onNavigate('register')}
+            onClick={() => handleNav('register')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -25,7 +32,7 @@ function Sidebar({ activeItem, onNavigate, isOpen, onClose, isAdmin }) {
           <button
             type="button"
             className={`sidebar-nav-item ${activeItem === 'add-record' ? 'active' : ''}`}
-            onClick={() => onNavigate('add-record')}
+            onClick={() => handleNav('add-record')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -40,7 +47,7 @@ function Sidebar({ activeItem, onNavigate, isOpen, onClose, isAdmin }) {
               <button
                 type="button"
                 className={`sidebar-nav-item ${activeItem === 'audit' ? 'active' : ''}`}
-                onClick={() => onNavigate('audit')}
+                onClick={() => handleNav('audit')}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
