@@ -29,6 +29,7 @@ function NewRecordPage({
     source: '',
     summary: '',
     attachments: [],
+    attachmentCount: '',
     commander: '',
     responsible: '',
     status: 'قيد المعالجة',
@@ -254,9 +255,22 @@ function NewRecordPage({
               </div>
             </div>
 
+            {/* Attachment Count */}
+            <div className="form-group">
+              <label className="form-label">عدد المرفقات</label>
+              <input
+                className="form-input"
+                type="number"
+                min="0"
+                value={form.attachmentCount}
+                onChange={(e) => handleChange('attachmentCount', e.target.value)}
+                placeholder="أدخل عدد المرفقات"
+              />
+            </div>
+
             {/* Attachments */}
             <div className="form-group">
-              <label className="form-label">المرفقات (PDF, صور, Word)</label>
+              <label className="form-label">رفع المرفقات (PDF, صور, Word)</label>
               <div className="nrp-upload">
                 <input
                   type="file"
@@ -388,6 +402,18 @@ function NewRecordPage({
               />
             </div>
           </div>
+        </div>
+
+        {/* Bottom Save Button */}
+        <div className="nrp-bottom-actions">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            إلغاء
+          </Button>
+          <Button type="submit" variant="success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            حفظ المعاملة
+          </Button>
         </div>
       </form>
 

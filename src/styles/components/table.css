@@ -643,15 +643,21 @@
 
   .toolbar-left {
     width: 100%;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
   }
 
   .toolbar-left .btn {
-    flex: 1;
     min-width: 0;
     font-size: var(--font-small);
-    padding: 0.5rem 0.65rem;
+    padding: 0.55rem 0.75rem;
+    justify-content: center;
+  }
+
+  .toolbar-left .btn--primary {
+    grid-column: 1 / -1;
+    padding: 0.65rem 1rem;
   }
 
   .search-box {
