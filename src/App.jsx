@@ -6,6 +6,16 @@ import Register from './components/Register';
 import NewRecordPage from './components/NewRecordPage';
 import Toast from './components/Toast';
 import AuditLogModal from './components/AuditLogModal';
+import {
+  generateFakeData,
+  departments as defaultDepartments,
+  responsiblePersons as defaultResponsible,
+  commanders as defaultCommanders,
+  types as defaultTypes,
+  statuses as defaultStatuses,
+  priorities as defaultPriorities,
+  classifications as defaultClassifications,
+} from './data/fakeData';
 
 const getSimulatedIP = () => {
   const ipList = ['10.140.12.33', '10.140.12.45', '10.140.15.12', '10.140.12.89'];
@@ -20,7 +30,7 @@ function App() {
 
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'dark');
   const [showAuditLogs, setShowAuditLogs] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeNav, setActiveNav] = useState('register');
   const [systemLogo, setSystemLogo] = useState(() => localStorage.getItem('system_logo') || null);
   const [auditLogs, setAuditLogs] = useState(() => {
@@ -152,36 +162,38 @@ function App() {
         console.error('Failed to parse local records', e);
       }
     }
-    return [];
+    const initial = generateFakeData(25);
+    localStorage.setItem('reg_records', JSON.stringify(initial));
+    return initial;
   });
 
   const [departmentsList, setDepartmentsList] = useState(() => {
-    const saved = localStorage.getItem('reg_departments');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_departments'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultDepartments];
   });
   const [responsibleList, setResponsibleList] = useState(() => {
-    const saved = localStorage.getItem('reg_responsible');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_responsible'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultResponsible];
   });
   const [commandersList, setCommandersList] = useState(() => {
-    const saved = localStorage.getItem('reg_commanders');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_commanders'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultCommanders];
   });
   const [typesList, setTypesList] = useState(() => {
-    const saved = localStorage.getItem('reg_types');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_types'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultTypes];
   });
   const [statusesList, setStatusesList] = useState(() => {
-    const saved = localStorage.getItem('reg_statuses');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_statuses'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultStatuses];
   });
   const [prioritiesList, setPrioritiesList] = useState(() => {
-    const saved = localStorage.getItem('reg_priorities');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_priorities'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultPriorities];
   });
   const [classificationsList, setClassificationsList] = useState(() => {
-    const saved = localStorage.getItem('reg_classifications');
-    return saved ? JSON.parse(saved) : [];
+    try { const s = localStorage.getItem('reg_classifications'); if (s) return JSON.parse(s); } catch {}
+    return [...defaultClassifications];
   });
 
   useEffect(() => {
@@ -189,8 +201,19 @@ function App() {
   }, [records]);
 
   const handleAddRecord = (newRecord) => {
+    // Sanitize attachments - strip blob URLs that can't be serialized
+    const sanitizedAttachments = Array.isArray(newRecord.attachments)
+      ? newRecord.attachments.map(att => ({
+          id: att.id,
+          name: att.name,
+          type: att.type,
+          size: att.size,
+        }))
+      : [];
+
     const recordToAdd = {
       ...newRecord,
+      attachments: sanitizedAttachments,
       id: `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       createdAt: new Date().toISOString(),
     };
