@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+
 function Modal({
   title,
   onClose,
@@ -8,7 +10,7 @@ function Modal({
 }) {
   const sizeClass = size === 'sm' ? 'modal--sm' : size === 'md' ? 'modal--md' : size === 'lg' ? 'modal--lg' : '';
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className={`modal ${sizeClass}`.trim()} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -26,7 +28,8 @@ function Modal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

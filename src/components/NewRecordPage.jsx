@@ -267,40 +267,57 @@ function NewRecordPage({
                     const files = Array.from(e.target.files);
                     if (!files.length) return;
 
-                    const newAttachments = files.map(file => ({
+                    // Create placeholder attachments with uploading state
+                    const placeholders = files.map(file => ({
                       id: Math.random().toString(36).substr(2, 9),
                       name: file.name,
                       type: file.type,
                       size: file.size,
-                      url: URL.createObjectURL(file),
+                      url: '',
                       progress: 0,
                       uploading: true,
                     }));
 
-                    handleChange('attachments', [...(form.attachments || []), ...newAttachments]);
+                    handleChange('attachments', [...(form.attachments || []), ...placeholders]);
 
-                    // Simulate upload progress for each file
-                    newAttachments.forEach((att) => {
-                      const totalDuration = 800 + Math.random() * 1200; // 0.8-2s
+                    // Read each file as base64 and simulate progress
+                    files.forEach((file, i) => {
+                      const att = placeholders[i];
+                      const reader = new FileReader();
+
+                      // Simulate progress while reading
+                      const totalDuration = 800 + Math.random() * 1200;
                       const steps = 20;
                       const interval = totalDuration / steps;
                       let step = 0;
 
                       const timer = setInterval(() => {
                         step++;
-                        const progress = Math.min(Math.round((step / steps) * 100), 100);
+                        const progress = Math.min(Math.round((step / steps) * 95), 95);
 
                         setForm(prev => ({
                           ...prev,
                           attachments: prev.attachments.map(a =>
-                            a.id === att.id
-                              ? { ...a, progress, uploading: progress < 100 }
-                              : a
+                            a.id === att.id ? { ...a, progress } : a
                           ),
                         }));
 
                         if (step >= steps) clearInterval(timer);
                       }, interval);
+
+                      reader.onload = () => {
+                        clearInterval(timer);
+                        setForm(prev => ({
+                          ...prev,
+                          attachments: prev.attachments.map(a =>
+                            a.id === att.id
+                              ? { ...a, url: reader.result, progress: 100, uploading: false }
+                              : a
+                          ),
+                        }));
+                      };
+
+                      reader.readAsDataURL(file);
                     });
 
                     e.target.value = '';

@@ -201,14 +201,17 @@ function App() {
   }, [records]);
 
   const handleAddRecord = (newRecord) => {
-    // Sanitize attachments - strip blob URLs that can't be serialized
+    // Sanitize attachments - keep data URLs for preview/sharing
     const sanitizedAttachments = Array.isArray(newRecord.attachments)
-      ? newRecord.attachments.map(att => ({
-          id: att.id,
-          name: att.name,
-          type: att.type,
-          size: att.size,
-        }))
+      ? newRecord.attachments
+          .filter(att => !att.uploading)
+          .map(att => ({
+            id: att.id,
+            name: att.name,
+            type: att.type,
+            size: att.size,
+            url: att.url || '',
+          }))
       : [];
 
     const recordToAdd = {

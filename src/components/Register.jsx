@@ -461,7 +461,7 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                     <td data-label="المرفقات">
                       <span className="attachment-count">
                         {Icons.paperclip}
-                        {record.attachments}
+                        {Array.isArray(record.attachments) ? record.attachments.length : (record.attachments || 0)}
                       </span>
                     </td>
                     <td data-label="المسؤول">
