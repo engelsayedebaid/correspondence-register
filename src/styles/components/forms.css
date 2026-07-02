@@ -72,22 +72,27 @@
 }
 
 .input-wrapper .form-input {
-  padding-right: 2.5rem;
+  padding-right: 3rem;
 }
 
 .input-icon {
   position: absolute;
-  right: 0.85rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
   display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   transition: color var(--transition);
+  z-index: 2;
+  opacity: 0.6;
 }
 
 .input-wrapper:focus-within .input-icon {
   color: var(--brand);
+  opacity: 1;
 }
 
 .input-icon svg {
