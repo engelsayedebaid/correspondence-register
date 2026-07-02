@@ -265,14 +265,45 @@ function NewRecordPage({
                   className="hidden-file-input"
                   onChange={(e) => {
                     const files = Array.from(e.target.files);
+                    if (!files.length) return;
+
                     const newAttachments = files.map(file => ({
                       id: Math.random().toString(36).substr(2, 9),
                       name: file.name,
                       type: file.type,
                       size: file.size,
-                      url: URL.createObjectURL(file)
+                      url: URL.createObjectURL(file),
+                      progress: 0,
+                      uploading: true,
                     }));
+
                     handleChange('attachments', [...(form.attachments || []), ...newAttachments]);
+
+                    // Simulate upload progress for each file
+                    newAttachments.forEach((att) => {
+                      const totalDuration = 800 + Math.random() * 1200; // 0.8-2s
+                      const steps = 20;
+                      const interval = totalDuration / steps;
+                      let step = 0;
+
+                      const timer = setInterval(() => {
+                        step++;
+                        const progress = Math.min(Math.round((step / steps) * 100), 100);
+
+                        setForm(prev => ({
+                          ...prev,
+                          attachments: prev.attachments.map(a =>
+                            a.id === att.id
+                              ? { ...a, progress, uploading: progress < 100 }
+                              : a
+                          ),
+                        }));
+
+                        if (step >= steps) clearInterval(timer);
+                      }, interval);
+                    });
+
+                    e.target.value = '';
                   }}
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                 />
@@ -293,20 +324,35 @@ function NewRecordPage({
                       <div className="attachment-icon">
                         {file.type?.includes('image') ? Icons.image : Icons.fileText}
                       </div>
-                      <div className="attachment-info">
+                      <div className="attachment-info" style={{ flex: 1 }}>
                         <span className="attachment-name">{file.name}</span>
-                        <span className="attachment-size">{(file.size / 1024).toFixed(1)} KB</span>
+                        <span className="attachment-size">
+                          {file.uploading
+                            ? `جاري الرفع... ${file.progress}%`
+                            : `${(file.size / 1024).toFixed(1)} KB`
+                          }
+                        </span>
+                        {file.uploading && (
+                          <div className="upload-progress-bar">
+                            <div
+                              className="upload-progress-fill"
+                              style={{ width: `${file.progress}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        className="attachment-remove"
-                        onClick={() => {
-                          const next = form.attachments.filter((_, i) => i !== idx);
-                          handleChange('attachments', next);
-                        }}
-                      >
-                        {Icons.x}
-                      </button>
+                      {!file.uploading && (
+                        <button
+                          type="button"
+                          className="attachment-remove"
+                          onClick={() => {
+                            const next = form.attachments.filter((_, i) => i !== idx);
+                            handleChange('attachments', next);
+                          }}
+                        >
+                          {Icons.x}
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
