@@ -13,12 +13,17 @@ import { Icons } from './Icons';
 import AddEditModal from './AddEditModal';
 import ViewModal from './ViewModal';
 import DeleteModal from './DeleteModal';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
 
-const ITEMS_PER_PAGE = 10;
-
+const ROWS_OPTIONS = [10, 15, 20, 25, 50];
+const FONT_SIZES = [
+  { key: 'small', label: 'صغير', size: '0.72rem' },
+  { key: 'medium', label: 'متوسط', size: '0.8125rem' },
+  { key: 'large', label: 'كبير', size: '0.95rem' },
+];
 const avatarColors = ['c1', 'c2', 'c3', 'c4', 'c5'];
 
-// Helper to load/save lists from localStorage
 function loadList(key, defaults) {
   try {
     const saved = localStorage.getItem(key);
@@ -31,6 +36,13 @@ function saveList(key, list) {
   localStorage.setItem(key, JSON.stringify(list));
 }
 
+function getClassificationVariant(classification) {
+  if (classification === 'سري للغاية') return 'top-secret';
+  if (classification === 'سري') return 'secret';
+  if (classification === 'محدود') return 'restricted';
+  return 'public';
+}
+
 function Register({ user, addToast, addLogEntry }) {
   const [records, setRecords] = useState(() => {
     const saved = localStorage.getItem('reg_records');
@@ -38,7 +50,7 @@ function Register({ user, addToast, addLogEntry }) {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        console.error("Failed to parse local records", e);
+        console.error('Failed to parse local records', e);
       }
     }
     const initial = generateFakeData(25);
@@ -54,8 +66,15 @@ function Register({ user, addToast, addLogEntry }) {
   const [typeFilter, setTypeFilter] = useState('الكل');
   const [statusFilter, setStatusFilter] = useState('الكل');
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(() => {
+    const saved = localStorage.getItem('reg_rows_per_page');
+    return saved ? Number(saved) : 10;
+  });
+  const [fontSizeKey, setFontSizeKey] = useState(() => {
+    return localStorage.getItem('reg_font_size') || 'medium';
+  });
+  const currentFontSize = FONT_SIZES.find(f => f.key === fontSizeKey) || FONT_SIZES[1];
 
-  // Editable dropdown lists (persisted in localStorage)
   const [departmentsList, setDepartmentsList] = useState(() => loadList('reg_departments', defaultDepartments));
   const [responsibleList, setResponsibleList] = useState(() => loadList('reg_responsible', defaultResponsible));
   const [commandersList, setCommandersList] = useState(() => loadList('reg_commanders', defaultCommanders));
@@ -72,13 +91,18 @@ function Register({ user, addToast, addLogEntry }) {
   const handlePrioritiesChange = (list) => { setPrioritiesList(list); saveList('reg_priorities', list); };
   const handleClassificationsChange = (list) => { setClassificationsList(list); saveList('reg_classifications', list); };
 
-  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [editRecord, setEditRecord] = useState(null);
   const [viewRecord, setViewRecord] = useState(null);
   const [deleteRecord, setDeleteRecord] = useState(null);
 
-  // Filtered data
+  const today = new Date().toLocaleDateString('ar-EG', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
   const filtered = useMemo(() => {
     return records.filter((r) => {
       const matchSearch =
@@ -97,23 +121,19 @@ function Register({ user, addToast, addLogEntry }) {
     });
   }, [records, search, typeFilter, statusFilter]);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginated = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
   );
 
-  // Stats
-  const stats = useMemo(() => {
-    return {
-      total: records.length,
-      incoming: records.filter((r) => r.type === 'وارد').length,
-      outgoing: records.filter((r) => r.type === 'صادر').length,
-      urgent: records.filter((r) => r.status === 'عاجل').length,
-    };
-  }, [records]);
+  const stats = useMemo(() => ({
+    total: records.length,
+    incoming: records.filter((r) => r.type === 'وارد').length,
+    outgoing: records.filter((r) => r.type === 'صادر').length,
+    urgent: records.filter((r) => r.status === 'عاجل').length,
+  }), [records]);
 
-  // Handlers
   const handleAdd = (data) => {
     const newRecord = {
       ...data,
@@ -139,7 +159,7 @@ function Register({ user, addToast, addLogEntry }) {
     addLogEntry('حذف معاملة بقيد رقم: ' + deleteRecord.registrationNumber);
     setDeleteRecord(null);
     addToast('تم حذف المعاملة بنجاح', 'success');
-    const newTotal = Math.ceil((filtered.length - 1) / ITEMS_PER_PAGE);
+    const newTotal = Math.ceil((filtered.length - 1) / rowsPerPage);
     if (currentPage > newTotal && newTotal > 0) {
       setCurrentPage(newTotal);
     }
@@ -167,12 +187,10 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
         title: `مكاتبة رقم ${record.registrationNumber}`,
         text: text,
       }).catch(() => {
-        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
       });
     } else {
-      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
   };
 
@@ -184,59 +202,58 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
     return avatarColors[Math.abs(hash) % avatarColors.length];
   };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'مكتمل': return 'completed';
-      case 'قيد المعالجة': return 'pending';
-      case 'عاجل': return 'urgent';
-      default: return '';
-    }
+  const getStatusVariant = (status) => {
+    if (status === 'مكتمل') return 'completed';
+    if (status === 'قيد المعالجة') return 'pending';
+    if (status === 'عاجل') return 'urgent';
+    return 'pending';
   };
 
   const getPriorityClass = (priority) => {
-    switch (priority) {
-      case 'عالي': return 'high';
-      case 'متوسط': return 'medium';
-      case 'منخفض': return 'low';
-      default: return '';
-    }
+    if (priority === 'عالي') return 'high';
+    if (priority === 'متوسط') return 'medium';
+    return 'low';
   };
 
   return (
     <>
-      {/* Stats */}
+      <div className="page-header">
+        <h1 className="page-title">سجل الوارد والصادر</h1>
+        <p className="page-subtitle">إدارة ومتابعة المعاملات والمكاتبات الرسمية</p>
+        <p className="page-meta">{today}</p>
+      </div>
+
       <div className="stats-bar">
         <div className="stat-card">
           <div className="stat-icon blue">{Icons.clipboard}</div>
-          <div className="stat-info">
+          <div>
             <div className="stat-value">{stats.total}</div>
             <div className="stat-label">إجمالي المعاملات</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon green">{Icons.inbox}</div>
-          <div className="stat-info">
+          <div>
             <div className="stat-value">{stats.incoming}</div>
             <div className="stat-label">الوارد</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon amber">{Icons.send}</div>
-          <div className="stat-info">
+          <div>
             <div className="stat-value">{stats.outgoing}</div>
             <div className="stat-label">الصادر</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon rose">{Icons.alertTriangle}</div>
-          <div className="stat-info">
+          <div>
             <div className="stat-value">{stats.urgent}</div>
             <div className="stat-label">عاجل</div>
           </div>
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="toolbar">
         <div className="toolbar-right">
           <div className="search-box">
@@ -253,53 +270,88 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
             />
           </div>
 
-          <div className="filter-group">
-            {['الكل', ...typesList].map((t) => (
-              <button
-                key={t}
-                className={`filter-chip ${typeFilter === t ? 'active' : ''}`}
-                onClick={() => {
-                  setTypeFilter(t);
-                  setCurrentPage(1);
-                }}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="filter-row">
+            <span className="filter-label">النوع:</span>
+            <div className="filter-group">
+              {['الكل', ...typesList].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`filter-chip ${typeFilter === t ? 'active' : ''}`}
+                  onClick={() => { setTypeFilter(t); setCurrentPage(1); }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="filter-group">
-            {['الكل', ...statusesList].map((s) => (
-              <button
-                key={s}
-                className={`filter-chip ${statusFilter === s ? 'active' : ''}`}
-                onClick={() => {
-                  setStatusFilter(s);
-                  setCurrentPage(1);
-                }}
-              >
-                {s}
-              </button>
-            ))}
+          <div className="filter-row">
+            <span className="filter-label">الحالة:</span>
+            <div className="filter-group">
+              {['الكل', ...statusesList].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={`filter-chip ${statusFilter === s ? 'active' : ''}`}
+                  onClick={() => { setStatusFilter(s); setCurrentPage(1); }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {user?.role !== 'مستعرض' && (
-          <button
-            className="btn btn-success"
-            onClick={() => setShowAddModal(true)}
-            id="add-record-btn"
-          >
+          <Button variant="success" onClick={() => setShowAddModal(true)} id="add-record-btn">
             {Icons.plus}
-            إضافة معاملة جديدة
-          </button>
+            إضافة معاملة
+          </Button>
         )}
       </div>
 
-      {/* Table */}
+      <div className="table-controls">
+        <div className="table-control-group">
+          <span className="table-control-label">حجم الخط:</span>
+          <div className="filter-group">
+            {FONT_SIZES.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className={`filter-chip ${fontSizeKey === f.key ? 'active' : ''}`}
+                onClick={() => {
+                  setFontSizeKey(f.key);
+                  localStorage.setItem('reg_font_size', f.key);
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="table-control-group">
+          <span className="table-control-label">صفوف / صفحة:</span>
+          <select
+            className="table-control-select"
+            value={rowsPerPage}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setRowsPerPage(val);
+              localStorage.setItem('reg_rows_per_page', val);
+              setCurrentPage(1);
+            }}
+          >
+            {ROWS_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n} صف</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="table-container">
         <div className="table-wrapper">
-          <table className="register-table" id="register-table">
+          <table className="register-table" id="register-table" style={{ fontSize: currentFontSize.size }}>
             <thead>
               <tr>
                 <th>#</th>
@@ -307,8 +359,8 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                 <th>التاريخ</th>
                 <th>النوع</th>
                 <th>الدرجة السرية</th>
-                <th>الجهة الواردة / المرسلة</th>
-                <th>ملخص المكاتبة الواردة ومضمونها</th>
+                <th>الجهة</th>
+                <th>ملخص المكاتبة</th>
                 <th>المرفقات</th>
                 <th>المسؤول</th>
                 <th>القائد / الوحدة</th>
@@ -323,45 +375,37 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                 <tr>
                   <td colSpan="14">
                     <div className="empty-state">
-                      <div className="empty-icon">{Icons.inboxEmpty}</div>
+                      <div className="empty-state-icon">{Icons.inboxEmpty}</div>
                       <h3>لا توجد معاملات</h3>
-                      <p>لم يتم العثور على نتائج مطابقة للبحث</p>
+                      <p>لم يتم العثور على نتائج مطابقة للبحث أو الفلاتر المحددة</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paginated.map((record, index) => (
-                  <tr key={record.id} className="row-enter">
-                    <td className="row-number">
-                      {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                  <tr key={record.id}>
+                    <td className="row-number" data-label="#">
+                      {(currentPage - 1) * rowsPerPage + index + 1}
                     </td>
-                    <td data-label="رقم القيد" style={{ fontWeight: 700, color: 'var(--text-accent)' }}>
+                    <td data-label="رقم القيد" className="cell-accent">
                       {record.registrationNumber}
                     </td>
                     <td data-label="التاريخ" className="table-date-cell">
                       {record.registrationDate}
                     </td>
                     <td data-label="النوع">
-                      <span
-                        className={`status-badge ${
-                          record.type === 'وارد' ? 'incoming' : 'outgoing'
-                        }`}
-                      >
-                        {record.type === 'وارد' ? Icons.arrowDownLeft : Icons.arrowUpRight} {record.type}
-                      </span>
+                      <Badge variant={record.type === 'وارد' ? 'incoming' : 'outgoing'}>
+                        {record.type === 'وارد' ? Icons.arrowDownLeft : Icons.arrowUpRight}
+                        {record.type}
+                      </Badge>
                     </td>
                     <td data-label="الدرجة السرية">
-                      <span className={`classification-badge ${
-                        record.classification === 'سري للغاية' ? 'top-secret' : record.classification === 'سري' ? 'secret' : record.classification === 'محدود' ? 'restricted' : 'public'
-                      }`}>
+                      <Badge variant={getClassificationVariant(record.classification)}>
                         {record.classification || 'عام'}
-                      </span>
+                      </Badge>
                     </td>
-                    <td data-label="الجهة الواردة / المرسلة" style={{ fontSize: '0.8rem' }}>{record.source}</td>
-                    <td data-label="ملخص المكاتبة ومضمونها"
-                      className="table-summary-cell"
-                      title={record.summary}
-                    >
+                    <td data-label="الجهة" className="cell-sm">{record.source}</td>
+                    <td data-label="ملخص المكاتبة" className="table-summary-cell" title={record.summary}>
                       {record.summary}
                     </td>
                     <td data-label="المرفقات">
@@ -372,46 +416,30 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                     </td>
                     <td data-label="المسؤول">
                       <span className="responsible-person">
-                        <span
-                          className={`responsible-avatar ${getResponsibleColor(
-                            record.responsible
-                          )}`}
-                        >
+                        <span className={`responsible-avatar ${getResponsibleColor(record.responsible)}`}>
                           {record.responsible.split(' ')[0][0]}
                         </span>
-                        <span style={{ fontSize: '0.8rem' }}>{record.responsible}</span>
+                        <span className="cell-sm">{record.responsible}</span>
                       </span>
                     </td>
-                    <td data-label="القائد / الوحدة" style={{ fontSize: '0.8rem' }}>{record.commander}</td>
+                    <td data-label="القائد / الوحدة" className="cell-sm">{record.commander}</td>
                     <td data-label="الحالة">
-                      <span className={`status-badge ${getStatusClass(record.status)}`}>
+                      <Badge variant={getStatusVariant(record.status)}>
                         {record.status}
-                      </span>
+                      </Badge>
                     </td>
                     <td data-label="الأولوية" style={{ textAlign: 'center' }}>
-                      <span
-                        className={`priority-dot ${getPriorityClass(record.priority)}`}
-                        title={record.priority}
-                      ></span>
+                      <span className={`priority-dot ${getPriorityClass(record.priority)}`} title={record.priority} />
                     </td>
-                    <td data-label="ملاحظات" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    <td data-label="ملاحظات" className="cell-muted">
                       {record.notes || '—'}
                     </td>
                     <td data-label="الإجراءات">
                       <div className="actions-cell">
-                        <button
-                          className="action-btn view"
-                          title="عرض"
-                          onClick={() => setViewRecord(record)}
-                        >
+                        <button type="button" className="action-btn view" title="عرض" onClick={() => setViewRecord(record)}>
                           {Icons.eye}
                         </button>
-                        <button
-                          className="action-btn share"
-                          title="مشاركة"
-                          onClick={() => handleShareRecord(record)}
-                          style={{ color: '#3b82f6' }}
-                        >
+                        <button type="button" className="action-btn share" title="مشاركة" onClick={() => handleShareRecord(record)}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="18" cy="5" r="3" />
                             <circle cx="6" cy="12" r="3" />
@@ -421,20 +449,12 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                           </svg>
                         </button>
                         {user?.role !== 'مستعرض' && (
-                          <button
-                            className="action-btn edit"
-                            title="تعديل"
-                            onClick={() => setEditRecord(record)}
-                          >
+                          <button type="button" className="action-btn edit" title="تعديل" onClick={() => setEditRecord(record)}>
                             {Icons.edit}
                           </button>
                         )}
                         {user?.role === 'مدير النظام' && (
-                          <button
-                            className="action-btn delete"
-                            title="حذف"
-                            onClick={() => setDeleteRecord(record)}
-                          >
+                          <button type="button" className="action-btn delete" title="حذف" onClick={() => setDeleteRecord(record)}>
                             {Icons.trash}
                           </button>
                         )}
@@ -447,34 +467,25 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
           </table>
         </div>
 
-        {/* Footer */}
         <div className="table-footer">
           <span className="table-info">
-            عرض {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filtered.length)} -{' '}
-            {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} معاملة
+            عرض {Math.min((currentPage - 1) * rowsPerPage + 1, filtered.length)} -{' '}
+            {Math.min(currentPage * rowsPerPage, filtered.length)} من {filtered.length} معاملة
           </span>
           <div className="pagination">
-            <button
-              className="page-btn"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-            >
+            <button type="button" className="page-btn" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>
               ❯
             </button>
             {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
               let page;
-              if (totalPages <= 5) {
-                page = i + 1;
-              } else if (currentPage <= 3) {
-                page = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                page = totalPages - 4 + i;
-              } else {
-                page = currentPage - 2 + i;
-              }
+              if (totalPages <= 5) page = i + 1;
+              else if (currentPage <= 3) page = i + 1;
+              else if (currentPage >= totalPages - 2) page = totalPages - 4 + i;
+              else page = currentPage - 2 + i;
               return (
                 <button
                   key={page}
+                  type="button"
                   className={`page-btn ${currentPage === page ? 'active' : ''}`}
                   onClick={() => setCurrentPage(page)}
                 >
@@ -482,18 +493,13 @@ _تمت المشاركة من نظام سجل الوارد والصادر الإ
                 </button>
               );
             })}
-            <button
-              className="page-btn"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-            >
+            <button type="button" className="page-btn" disabled={currentPage >= totalPages || totalPages === 0} onClick={() => setCurrentPage((p) => p + 1)}>
               ❮
             </button>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
       {showAddModal && (
         <AddEditModal
           onClose={() => setShowAddModal(false)}

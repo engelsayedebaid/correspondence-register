@@ -75,14 +75,12 @@ function EditableSelect({ value, onChange, options, onOptionsChange, placeholder
       {/* Trigger button */}
       <button
         type="button"
-        className={`editable-select-trigger ${error ? 'has-error' : ''} ${isOpen ? 'is-open' : ''}`}
+        className={`editable-select-trigger ${error ? 'has-error' : ''} ${isOpen ? 'is-open' : ''} ${!value ? 'placeholder' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={value ? 'selected-text' : 'placeholder-text'}>
-          {selectedLabel}
-        </span>
+        <span>{selectedLabel}</span>
         <svg
-          className={`chevron ${isOpen ? 'rotated' : ''}`}
+          className="editable-select-arrow"
           width="12" height="12" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" strokeWidth="2.5"
           strokeLinecap="round" strokeLinejoin="round"
@@ -102,13 +100,13 @@ function EditableSelect({ value, onChange, options, onOptionsChange, placeholder
               options.map((item) => (
                 <div
                   key={item}
-                  className={`editable-select-option ${value === item ? 'is-selected' : ''}`}
+                  className={`editable-select-option ${value === item ? 'selected' : ''}`}
                   onClick={() => handleSelect(item)}
                 >
                   <span className="option-text">{item}</span>
                   <button
                     type="button"
-                    className="option-delete-btn"
+                    className="editable-select-delete"
                     onClick={(e) => handleDelete(e, item)}
                     title="حذف"
                   >
@@ -123,43 +121,25 @@ function EditableSelect({ value, onChange, options, onOptionsChange, placeholder
           </div>
 
           {/* Add new item section */}
-          <div className="editable-select-footer">
+          <div>
             {showAddInput ? (
-              <div className="add-item-row">
+              <div className="editable-select-add-input">
                 <input
                   ref={inputRef}
                   type="text"
-                  className="add-item-input"
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="أدخل اسم العنصر الجديد..."
                 />
-                <button
-                  type="button"
-                  className="add-item-confirm"
-                  onClick={handleAdd}
-                  disabled={!newItem.trim()}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="add-item-cancel"
-                  onClick={() => { setShowAddInput(false); setNewItem(''); }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+                <button type="button" onClick={handleAdd} disabled={!newItem.trim()}>
+                  إضافة
                 </button>
               </div>
             ) : (
               <button
                 type="button"
-                className="add-new-btn"
+                className="editable-select-add"
                 onClick={() => setShowAddInput(true)}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

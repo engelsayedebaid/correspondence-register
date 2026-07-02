@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import Login from './components/Login';
 import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import Register from './components/Register';
 import Toast from './components/Toast';
 import AuditLogModal from './components/AuditLogModal';
 
-// Intranet IP simulator
 const getSimulatedIP = () => {
   const ipList = ['10.140.12.33', '10.140.12.45', '10.140.15.12', '10.140.12.89'];
   return ipList[Math.floor(Math.random() * ipList.length)];
@@ -17,9 +17,10 @@ function App() {
   const [toasts, setToasts] = useState([]);
   const [sessionStart, setSessionStart] = useState(null);
 
-  // Security features: Theme and Logs
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'dark');
   const [showAuditLogs, setShowAuditLogs] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeNav, setActiveNav] = useState('register');
   const [systemLogo, setSystemLogo] = useState(() => localStorage.getItem('system_logo') || null);
   const [auditLogs, setAuditLogs] = useState(() => {
     try {
@@ -43,17 +44,11 @@ function App() {
     }
   };
 
-  // Apply theme class on body
   useEffect(() => {
-    if (theme === 'light') {
-      document.body.classList.add('light-mode');
-    } else {
-      document.body.classList.remove('light-mode');
-    }
+    document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('app_theme', theme);
   }, [theme]);
 
-  // Check for existing session
   useEffect(() => {
     const session = sessionStorage.getItem('auth_session');
     if (session) {
@@ -65,7 +60,6 @@ function App() {
           setSessionStart(parsed.timestamp);
         } else {
           sessionStorage.removeItem('auth_session');
-          addToast('انتهت الجلسة، يرجى تسجيل الدخول مجدداً', 'error');
         }
       } catch {
         sessionStorage.removeItem('auth_session');
@@ -81,11 +75,10 @@ function App() {
     }, 3500);
   }, []);
 
-  // Write log to the Security Audit Log list
   const addLogEntry = useCallback((action, customUser = null) => {
     const currentUser = customUser || user;
     if (!currentUser) return;
-    
+
     const newLog = {
       timestamp: new Date().toLocaleString('ar-EG', { hour12: true }),
       username: currentUser.name,
@@ -105,7 +98,6 @@ function App() {
     let role = 'مدير النظام';
     let fullName = username;
 
-    // Detect user role based on username credentials
     if (username.toLowerCase() === 'admin') {
       role = 'مدير النظام';
       fullName = 'المسؤول العام / أدمن (Admin)';
@@ -128,9 +120,8 @@ function App() {
     setIsAuthenticated(true);
     setUser(session.user);
     setSessionStart(session.timestamp);
-    
-    // Log login success
-    addLogEntry('تسجيل دخول ناجح للمنظومة', session.user);
+
+    addLogEntry('تسجيل دخول ناجح للمنظومة', sessionUser);
     addToast(`مرحباً بك في المنظومة الحكومية الأمنية، تم تسجيل الدخول بنجاح`, 'success');
   };
 
@@ -151,6 +142,13 @@ function App() {
     addToast('تم تصفير سجل العمليات الأمني بالكامل', 'info');
   };
 
+  const handleNavigate = (item) => {
+    setActiveNav(item);
+    if (item === 'audit') {
+      setShowAuditLogs(true);
+    }
+  };
+
   return (
     <>
       <Toast toasts={toasts} />
@@ -164,24 +162,36 @@ function App() {
             sessionStart={sessionStart}
             theme={theme}
             onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            onOpenLogs={() => setShowAuditLogs(true)}
             systemLogo={systemLogo}
             onLogoChange={handleLogoChange}
+            onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           />
-          <main className="main-content">
-            <Register
-              user={user}
-              addToast={addToast}
-              addLogEntry={addLogEntry}
+          <div className="app-body">
+            <Sidebar
+              activeItem={activeNav}
+              onNavigate={handleNavigate}
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+              isAdmin={user?.role === 'مدير النظام'}
             />
-          </main>
+            <main className="main-content">
+              <Register
+                user={user}
+                addToast={addToast}
+                addLogEntry={addLogEntry}
+              />
+            </main>
+          </div>
         </div>
       )}
 
       {showAuditLogs && (
         <AuditLogModal
           logs={auditLogs}
-          onClose={() => setShowAuditLogs(false)}
+          onClose={() => {
+            setShowAuditLogs(false);
+            setActiveNav('register');
+          }}
           onClear={handleClearLogs}
         />
       )}

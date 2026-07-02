@@ -1,83 +1,87 @@
+import Modal from './ui/Modal';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
+
+function getRoleVariant(role) {
+  if (role === 'مدير النظام') return 'urgent';
+  if (role === 'مدخل بيانات') return 'pending';
+  return 'incoming';
+}
+
+function getActionClass(action) {
+  if (action.includes('حذف')) return 'log-action--danger';
+  if (action.includes('دخول')) return 'log-action--success';
+  return 'log-action--info';
+}
+
 function AuditLogModal({ onClose, logs, onClear }) {
+  const footer = (
+    <>
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={() => {
+          if (window.confirm('هل أنت متأكد من تصفير سجل العمليات بالكامل؟')) {
+            onClear();
+          }
+        }}
+        disabled={logs.length === 0}
+      >
+        تصفير السجل
+      </Button>
+      <Button variant="ghost" onClick={onClose}>
+        إغلاق
+      </Button>
+    </>
+  );
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: '850px', width: '95%' }} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">سجل العمليات الأمني (Audit Logs)</h2>
-          <button className="modal-close" onClick={onClose}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
+    <Modal
+      title="سجل العمليات الأمني"
+      onClose={onClose}
+      size="lg"
+      footer={footer}
+      footerClass="modal-footer--between"
+    >
+      <p className="audit-description">
+        يقوم هذا السجل برصد كافة العمليات والأنشطة الأمنية في النظام بشكل فوري لضمان الشفافية ومراقبة الوصول.
+      </p>
 
-        <div className="modal-body" style={{ padding: '1.25rem' }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.5' }}>
-            يقوم هذا السجل برصد كافة العمليات والأنشطة الأمنية الحاصلة في النظام بشكل فوري وغير قابل للتعديل لضمان الشفافية ومراقبة الوصول في المؤسسة الحكومية.
-          </p>
-
-          <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            <table className="register-table" style={{ fontSize: '0.8rem' }}>
-              <thead style={{ background: '#111827' }}>
-                <tr>
-                  <th style={{ width: '160px' }}>التاريخ والوقت</th>
-                  <th>المستخدم</th>
-                  <th>الدور</th>
-                  <th>الإجراء المتخذ</th>
-                  <th>الجهاز / عنوان IP</th>
+      <div className="audit-table-wrap">
+        <table className="audit-table">
+          <thead>
+            <tr>
+              <th style={{ width: '160px' }}>التاريخ والوقت</th>
+              <th>المستخدم</th>
+              <th>الدور</th>
+              <th>الإجراء</th>
+              <th>عنوان IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="audit-empty">
+                  لا توجد عمليات مسجلة حالياً
+                </td>
+              </tr>
+            ) : (
+              [...logs].reverse().map((log, index) => (
+                <tr key={index}>
+                  <td style={{ direction: 'ltr', color: 'var(--text-muted)' }}>{log.timestamp}</td>
+                  <td style={{ fontWeight: 600 }}>{log.username}</td>
+                  <td>
+                    <Badge variant={getRoleVariant(log.role)}>{log.role}</Badge>
+                  </td>
+                  <td className={getActionClass(log.action)}>{log.action}</td>
+                  <td style={{ direction: 'ltr', color: 'var(--text-muted)' }}>{log.ip}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {logs.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                      لا توجد عمليات مسجلة حالياً
-                    </td>
-                  </tr>
-                ) : (
-                  [...logs].reverse().map((log, index) => (
-                    <tr key={index} style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
-                      <td style={{ direction: 'ltr', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{log.timestamp}</td>
-                      <td style={{ fontWeight: 600, color: '#f1f5f9' }}>{log.username}</td>
-                      <td>
-                        <span className={`status-badge ${
-                          log.role === 'مدير النظام' ? 'urgent' : log.role === 'مدخل بيانات' ? 'pending' : 'incoming'
-                        }`} style={{ padding: '0.15rem 0.4rem', fontSize: '0.7rem' }}>
-                          {log.role}
-                        </span>
-                      </td>
-                      <td style={{ color: log.action.includes('حذف') ? 'var(--accent-rose)' : log.action.includes('دخول') ? '#6ee7b7' : '#93c5fd' }}>
-                        {log.action}
-                      </td>
-                      <td style={{ direction: 'ltr', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{log.ip}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
-          <button
-            type="button"
-            className="btn btn-danger btn-sm"
-            onClick={() => {
-              if (window.confirm('هل أنت متأكد من تصفير سجل العمليات بالكامل؟')) {
-                onClear();
-              }
-            }}
-            disabled={logs.length === 0}
-          >
-            تصفير السجل الأمني
-          </button>
-          
-          <button className="btn btn-ghost" onClick={onClose}>
-            إغلاق
-          </button>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </Modal>
   );
 }
 
